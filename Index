@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Checklist Sécurité Incendie</title>
+  <meta name="theme-color" content="#111827" />
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#111831;
+      --muted:#a8b3cf;
+      --text:#eef2ff;
+      --ok:#22c55e;
+      --ko:#ef4444;
+      --imp:#f59e0b;
+      --line:#243055;
+      --btn:#1f2a4a;
+      --btn2:#25335a;
+      --shadow: 0 10px 25px rgba(0,0,0,.35);
+      --radius: 16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:var(--sans);
+      background: radial-gradient(1200px 600px at 20% 0%, #172554 0%, transparent 60%),
+                  radial-gradient(900px 500px at 80% 10%, #3b0764 0%, transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    header{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter: blur(10px);
+      background: rgba(11,16,32,.72);
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .wrap{max-width:1100px; margin:0 auto; padding:14px 14px 24px;}
+    .top{
+      display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+    }
+    h1{font-size:18px; margin:0; letter-spacing:.2px}
+    .sub{color:var(--muted); font-size:12px; margin-top:3px}
+    .controls{
+      display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end;
+    }
+    .pill, button, input, select, textarea{
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding:10px 12px;
+      font-size:14px;
+      outline:none;
+    }
+    input[type="search"]{min-width:220px}
+    button{
+      cursor:pointer;
+      background: linear-gradient(180deg, var(--btn2), var(--btn));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow: 0 6px 16px rgba(0,0,0,.25);
+    }
+    button:hover{filter:brightness(1.07)}
+    button:active{transform:translateY(1px)}
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:12px;
+      margin-top:14px;
+    }
+    @media(min-width:900px){
+      .grid{grid-template-columns: 320px 1fr;}
+    }
+    .panel{
+      background: rgba(17,24,49,.55);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:14px;
+    }
+    .panel h2{font-size:14px; margin:0 0 10px 0; color:#dbeafe}
+    .stats{
+      display:grid; grid-template-columns: repeat(3, 1fr);
+      gap:10px; margin-top:10px;
+    }
+    .stat{
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.05);
+      border-radius: 14px;
+      padding:10px;
+      text-align:center;
+    }
+    .stat .n{font-size:18px; font-weight:700}
+    .stat .l{font-size:12px; color:var(--muted); margin-top:2px}
+    .ok{color:var(--ok)} .ko{color:var(--ko)} .imp{color:var(--imp)}
+    .section{
+      border-radius: var(--radius);
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(17,24,49,.55);
+      box-shadow: var(--shadow);
+    }
+    .sectionHeader{
+      display:flex; justify-content:space-between; align-items:center;
+      padding:12px 14px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      gap:10px; flex-wrap:wrap;
+    }
+    .sectionHeader .title{
+      display:flex; gap:10px; align-items:baseline; flex-wrap:wrap;
+    }
+    .sectionHeader h3{margin:0; font-size:14px}
+    .sectionHeader .hint{color:var(--muted); font-size:12px}
+    .items{padding:10px}
+    .item{
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      border-radius: 14px;
+      padding:12px;
+      margin-bottom:10px;
+    }
+    .item:last-child{margin-bottom:0}
+    .row{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    }
+    .label{
+      font-weight:650; line-height:1.25;
+      max-width: 720px;
+    }
+    .meta{
+      color:var(--muted); font-size:12px; margin-top:4px;
+    }
+    .btnGroup{
+      display:flex; gap:6px; flex-wrap:wrap; align-items:center;
+    }
+    .statusBtn{
+      padding:8px 10px; border-radius: 12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.06);
+      font-size:13px;
+    }
+    .statusBtn[data-s="OK"].active{background: rgba(34,197,94,.20); border-color: rgba(34,197,94,.55)}
+    .statusBtn[data-s="KO"].active{background: rgba(239,68,68,.20); border-color: rgba(239,68,68,.55)}
+    .statusBtn[data-s="IMP"].active{background: rgba(245,158,11,.20); border-color: rgba(245,158,11,.55)}
+    textarea{
+      width:100%;
+      margin-top:10px;
+      min-height:70px;
+      resize:vertical;
+      font-family: var(--sans);
+      line-height:1.25;
+    }
+    .small{
+      font-size:12px; color:var(--muted);
+      margin-top:10px; line-height:1.4;
+    }
+    .hr{height:1px; background:rgba(255,255,255,.08); margin:12px 0}
+    .mono{font-family:var(--mono)}
+    .danger{color:#fecaca}
+    .linkish{color:#bfdbfe; text-decoration:underline; cursor:pointer}
+    .footerBtns{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1>Checklist Sécurité Incendie</h1>
+        <div class="sub">Statuts : Impossible / OK / KO • Sauvegarde locale • Export JSON</div>
+      </div>
+      <div class="controls">
+        <input id="siteName" class="pill" placeholder="Site (ex : Bayonne - BV)" />
+        <input id="who" class="pill" placeholder="Contrôleur (nom)" />
+        <input id="date" class="pill" type="date" />
+        <input id="search" class="pill" type="search" placeholder="Rechercher un item…" />
+        <button id="addItemBtn" title="Ajouter un item">+ Item</button>
+        <button id="exportBtn" title="Exporter en JSON">Exporter</button>
+        <button id="resetBtn" title="Réinitialiser (tout effacer)">Reset</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid">
+    <aside class="panel">
+      <h2>Résumé</h2>
+      <div class="stats">
+        <div class="stat"><div class="n ok" id="sOk">0</div><div class="l">OK</div></div>
+        <div class="stat"><div class="n ko" id="sKo">0</div><div class="l">KO</div></div>
+        <div class="stat"><div class="n imp" id="sImp">0</div><div class="l">Impossible</div></div>
+      </div>
+      <div class="hr"></div>
+      <div class="small">
+        <div><span class="mono">OK</span> = conforme</div>
+        <div><span class="mono">KO</span> = non conforme / anomalie</div>
+        <div><span class="mono">IMP</span> = impossible à vérifier (accès, absence d’info, etc.)</div>
+      </div>
+      <div class="hr"></div>
+      <h2>Filtre</h2>
+      <select id="statusFilter" class="pill" style="width:100%">
+        <option value="ALL">Tous</option>
+        <option value="OK">OK</option>
+        <option value="KO">KO</option>
+        <option value="IMP">Impossible</option>
+        <option value="NONE">Non renseigné</option>
+      </select>
+      <div class="footerBtns">
+        <button id="markAllNone">Tout vider</button>
+        <button id="markAllOk">Tout OK</button>
+        <button id="markAllKo">Tout KO</button>
+      </div>
+      <div class="small">
+        Items préchargés d’après le guide opérationnel SNCF **ER TER NA RG10025 – EQ071** (moins de 50 pers.) : extincteurs, coupures fluides, consignes/exercice, dégagements/Issues/éclairage, etc.
+      </div>
+    </aside>
+
+    <section id="content"></section>
+  </div>
+</main>
+
+<dialog id="addDialog">
+  <form method="dialog" style="min-width:min(560px, 92vw); background:#0b1020; border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:14px; color:var(--text);">
+    <h3 style="margin:0 0 10px 0;">Ajouter un item</h3>
+    <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:6px;">Section</label>
+    <input id="newSection" placeholder="Ex: Extincteurs" style="width:100%; margin-bottom:10px;" />
+    <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:6px;">Libellé</label>
+    <input id="newLabel" placeholder="Ex: Extincteur accessible et sur son support mural" style="width:100%; margin-bottom:10px;" />
+    <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:6px;">Référence (optionnel)</label>
+    <input id="newRef" placeholder="Ex: EQ071 §1.1" style="width:100%; margin-bottom:12px;" />
+    <div style="display:flex; gap:8px; justify-content:flex-end;">
+      <button value="cancel">Annuler</button>
+      <button id="confirmAdd" value="default">Ajouter</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(() => {
+  const STORAGE_KEY = "incendie_checklist_v1";
+  const $ = (id) => document.getElementById(id);
+
+  const defaultData = {
+    meta: {
+      siteName: "",
+      who: "",
+      date: new Date().toISOString().slice(0,10),
+      createdAt: new Date().toISOString(),
+      version: 1
+    },
+    sections: [
+      {
+        name: "Extincteurs (EQ071 §1.1)",
+        hint: "Vérifier l’état et l’accessibilité des extincteurs.",
+        items: [
+          { id: crypto.randomUUID(), label: "Goupille présente + scellé de sécurité daté (année de maintenance)", ref: "EQ071 §1.1", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Extincteur accessible, au bon emplacement et sur son support mural", ref: "EQ071 §1.1", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Extincteur visible + signalétique adaptée", ref: "EQ071 §1.1", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Aiguille de pression dans la zone verte (si présent)", ref: "EQ071 §1.1", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Date de maintenance annuelle + date de mise en service visibles", ref: "EQ071 §1.1", status: "NONE", note: "" }
+        ]
+      },
+      {
+        name: "Autres moyens d’extinction (EQ071 §1.2)",
+        hint: "RIA / colonnes sèches / installations fixes : accessibles, manipulables, signalées.",
+        items: [
+          { id: crypto.randomUUID(), label: "Dispositif accessible", ref: "EQ071 §1.2", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Dispositif facilement manipulable", ref: "EQ071 §1.2", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Dispositif signalé de façon durable", ref: "EQ071 §1.2", status: "NONE", note: "" }
+        ]
+      },
+      {
+        name: "Signalisation matériel d’extinction (EQ071 §1.3)",
+        hint: "Identification par coloration/panneau. Couleur d’identification : rouge.",
+        items: [
+          { id: crypto.randomUUID(), label: "Matériel identifié par panneau de localisation OU coloration des emplacements", ref: "EQ071 §1.3", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Couleur d’identification rouge visible et cohérente", ref: "EQ071 §1.3", status: "NONE", note: "" }
+        ]
+      },
+      {
+        name: "Coupure des fluides (EQ071 §1.4)",
+        hint: "Arrêt d’urgence manœuvrable, accessible, signalé. Emplacements connus/affichés.",
+        items: [
+          { id: crypto.randomUUID(), label: "Dispositif d’arrêt d’urgence de l’alimentation d’énergie : accessible en permanence + signalé", ref: "EQ071 §1.4", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Emplacements des organes de coupure (électricité / gaz / eau) identifiés et affichés", ref: "EQ071 §1.4", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Agents du site connaissent l’emplacement des organes de coupure", ref: "EQ071 §1.4", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Absence de chauffage d’appoint (interdit si centrale classique fonctionne)", ref: "EQ071 §1.4", status: "NONE", note: "" }
+        ]
+      },
+      {
+        name: "Alarme (EQ071 §1.5)",
+        hint: "Moins de 50 personnes : pas d’obligation d’alarme sonore ; signal audible requis si dispositif.",
+        items: [
+          { id: crypto.randomUUID(), label: "Moyen d’alerte disponible si pas d’alarme (ex : consigne 'crier au feu')", ref: "EQ071 §1.5", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Si moyen sonore présent (sifflet / corne de brume), il est disponible et opérationnel", ref: "EQ071 §1.5", status: "NONE", note: "" }
+        ]
+      },
+      {
+        name: "Consignes & exercice (EQ071 §1.6-1.7)",
+        hint: "Instructions simples affichées + sensibilisation/exercice avec compte-rendu.",
+        items: [
+          { id: crypto.randomUUID(), label: "Instructions simples d’évacuation établies", ref: "EQ071 §1.6", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Consignes affichées de manière très apparente et consultables", ref: "EQ071 §1.6", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Sensibilisation / exercice : évacuation rapide (au moins via briefing terrain)", ref: "EQ071 §1.7", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Compte-rendu d’exercice réalisé / archivé", ref: "EQ071 §1.7", status: "NONE", note: "" }
+        ]
+      },
+      {
+        name: "Dégagements / issues / escaliers (EQ071 §2.1)",
+        hint: "Largeurs, issues dégagées, manœuvre simple, escaliers avec main-courante.",
+        items: [
+          { id: crypto.randomUUID(), label: "Dégagements dégagés : issues/couloirs/portes libres", ref: "EQ071 §2.1.2", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Issues de secours : manœuvre simple (poignée / barre anti-panique etc.)", ref: "EQ071 §2.1.2", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Pas de portes non réglementaires utilisées comme dégagement (coulissantes / tambour)", ref: "EQ071 §2.1.2", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Escaliers : rampe ou main-courante (des deux côtés si ≥ 1,50 m)", ref: "EQ071 §2.1.3", status: "NONE", note: "" }
+        ]
+      },
+      {
+        name: "Signalisation & éclairage d’évacuation (EQ071 §2.2)",
+        hint: "Chemin vers sortie la plus proche / espace d’attente, BAES et espacement.",
+        items: [
+          { id: crypto.randomUUID(), label: "Signalisation : chemin vers sortie la plus proche + vers espace d’attente sécurisé", ref: "EQ071 §2.2", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Sorties de secours signalées quand non utilisées habituellement", ref: "EQ071 §2.2", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Éclairage de sécurité présent si bâtiment > 19 personnes", ref: "EQ071 §2.2.1", status: "NONE", note: "" },
+          { id: crypto.randomUUID(), label: "Foyers lumineux d’évacuation espacés ≤ 15 mètres (si applicable)", ref: "EQ071 §2.2.1", status: "NONE", note: "" }
+        ]
+      }
+    ]
+  };
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return structuredClone(defaultData);
+      const parsed = JSON.parse(raw);
+      // upgrade minimal safety
+      if (!parsed.meta) parsed.meta = structuredClone(defaultData.meta);
+      if (!parsed.sections) parsed.sections = structuredClone(defaultData.sections);
+      return parsed;
+    } catch (e) {
+      console.warn("Load failed, using defaults", e);
+      return structuredClone(defaultData);
+    }
+  }
+
+  function save() {
+    state.meta.siteName = $("siteName").value.trim();
+    state.meta.who = $("who").value.trim();
+    state.meta.date = $("date").value || state.meta.date;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    render(); // keep stats fresh
+  }
+
+  function counts() {
+    let ok=0, ko=0, imp=0;
+    state.sections.forEach(sec => sec.items.forEach(it => {
+      if (it.status === "OK") ok++;
+      if (it.status === "KO") ko++;
+      if (it.status === "IMP") imp++;
+    }));
+    return {ok, ko, imp};
+  }
+
+  function matchesFilters(item, q, statusFilter) {
+    const text = (item.label + " " + (item.ref||"") + " " + (item.note||"")).toLowerCase();
+    const qOk = !q || text.includes(q);
+    const sOk =
+      statusFilter === "ALL" ? true :
+      statusFilter === "NONE" ? item.status === "NONE" :
+      item.status === statusFilter;
+    return qOk && sOk;
+  }
+
+  function render() {
+    // update meta inputs
+    $("siteName").value = state.meta.siteName || "";
+    $("who").value = state.meta.who || "";
+    $("date").value = state.meta.date || new Date().toISOString().slice(0,10);
+
+    // stats
+    const c = counts();
+    $("sOk").textContent = c.ok;
+    $("sKo").textContent = c.ko;
+    $("sImp").textContent = c.imp;
+
+    const q = $("search").value.trim().toLowerCase();
+    const statusFilter = $("statusFilter").value;
+
+    const content = $("content");
+    content.innerHTML = "";
+
+    state.sections.forEach((sec, secIdx) => {
+      // filter items
+      const visibleItems = sec.items.filter(it => matchesFilters(it, q, statusFilter));
+      if (visibleItems.length === 0) return;
+
+      const secEl = document.createElement("div");
+      secEl.className = "section";
+
+      const head = document.createElement("div");
+      head.className = "sectionHeader";
+
+      const titleWrap = document.createElement("div");
+      titleWrap.className = "title";
+      const h3 = document.createElement("h3");
+      h3.textContent = sec.name;
+      const hint = document.createElement("div");
+      hint.className = "hint";
+      hint.textContent = sec.hint || "";
+      titleWrap.appendChild(h3);
+      if (sec.hint) titleWrap.appendChild(hint);
+
+      const tools = document.createElement("div");
+      tools.className = "btnGroup";
+
+      const delSecBtn = document.createElement("button");
+      delSecBtn.textContent = "Suppr section";
+      delSecBtn.title = "Supprimer cette section (et ses items)";
+      delSecBtn.onclick = () => {
+        if (!confirm("Supprimer la section : " + sec.name + " ?")) return;
+        state.sections.splice(secIdx, 1);
+        save();
+      };
+
+      tools.appendChild(delSecBtn);
+
+      head.appendChild(titleWrap);
+      head.appendChild(tools);
+
+      const itemsWrap = document.createElement("div");
+      itemsWrap.className = "items";
+
+      visibleItems.forEach((it) => {
+        const card = document.createElement("div");
+        card.className = "item";
+
+        const row = document.createElement("div");
+        row.className = "row";
+
+        const left = document.createElement("div");
+        const lbl = document.createElement("div");
+        lbl.className = "label";
+        lbl.textContent = it.label;
+
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = it.ref ? ("Réf: " + it.ref) : "Réf: —";
+
+        left.appendChild(lbl);
+        left.appendChild(meta);
+
+        const right = document.createElement("div");
+        right.className = "btnGroup";
+
+        const mkBtn = (s, text) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "statusBtn";
+          b.dataset.s = s;
+          b.textContent = text;
+          if (it.status === s) b.classList.add("active");
+          b.onclick = () => {
+            it.status = (it.status === s) ? "NONE" : s;
+            save();
+          };
+          return b;
+        };
+
+        right.appendChild(mkBtn("IMP", "Impossible"));
+        right.appendChild(mkBtn("OK", "OK"));
+        right.appendChild(mkBtn("KO", "KO"));
+
+        const del = document.createElement("button");
+        del.type = "button";
+        del.textContent = "🗑️";
+        del.title = "Supprimer l’item";
+        del.onclick = () => {
+          if (!confirm("Supprimer cet item ?")) return;
+          // find & remove
+          const secReal = state.sections.find(s => s.items.some(x => x.id === it.id));
+          if (!secReal) return;
+          secReal.items = secReal.items.filter(x => x.id !== it.id);
+          save();
+        };
+        right.appendChild(del);
+
+        row.appendChild(left);
+        row.appendChild(right);
+
+        const ta = document.createElement("textarea");
+        ta.placeholder = "Note libre (ex : Extincteur abîmé, manque scellé, accès encombré…)";
+        ta.value = it.note || "";
+        ta.oninput = () => {
+          it.note = ta.value;
+          // save light (debounce)
+          clearTimeout(ta._t);
+          ta._t = setTimeout(save, 250);
+        };
+
+        card.appendChild(row);
+        card.appendChild(ta);
+        itemsWrap.appendChild(card);
+      });
+
+      secEl.appendChild(head);
+      secEl.appendChild(itemsWrap);
+      content.appendChild(secEl);
+    });
+
+    if (!content.children.length) {
+      const empty = document.createElement("div");
+      empty.className = "panel";
+      empty.innerHTML = `
+        <h2>Aucun résultat</h2>
+        <div class="small">Aucun item ne correspond au filtre/recherche.</div>
+      `;
+      content.appendChild(empty);
+    }
+  }
+
+  function exportJSON() {
+    // ensure latest meta
+    state.meta.siteName = $("siteName").value.trim();
+    state.meta.who = $("who").value.trim();
+    state.meta.date = $("date").value || state.meta.date;
+    const payload = JSON.stringify(state, null, 2);
+    const blob = new Blob([payload], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const safeSite = (state.meta.siteName || "site").replace(/[^\w\-]+/g, "_");
+    a.href = url;
+    a.download = `checklist_incendie_${safeSite}_${state.meta.date || ""}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function resetAll() {
+    if (!confirm("Tout effacer (statuts + notes + meta) ?")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    state = structuredClone(defaultData);
+    save();
+  }
+
+  function bulkSet(status) {
+    const q = $("search").value.trim().toLowerCase();
+    const statusFilter = $("statusFilter").value;
+    state.sections.forEach(sec => sec.items.forEach(it => {
+      // Only what user sees (respect filters)
+      if (matchesFilters(it, q, statusFilter)) {
+        it.status = status;
+      }
+    }));
+    save();
+  }
+
+  function addItem(sectionName, label, ref) {
+    sectionName = (sectionName || "").trim();
+    label = (label || "").trim();
+    ref = (ref || "").trim();
+    if (!sectionName || !label) return;
+
+    let sec = state.sections.find(s => s.name.toLowerCase() === sectionName.toLowerCase());
+    if (!sec) {
+      sec = { name: sectionName, hint: "", items: [] };
+      state.sections.push(sec);
+    }
+    sec.items.push({ id: crypto.randomUUID(), label, ref, status:"NONE", note:"" });
+    save();
+  }
+
+  let state = load();
+
+  // init inputs
+  $("date").value = state.meta.date || new Date().toISOString().slice(0,10);
+  $("siteName").value = state.meta.siteName || "";
+  $("who").value = state.meta.who || "";
+
+  // listeners
+  ["siteName","who","date"].forEach(id => $(id).addEventListener("change", save));
+  $("search").addEventListener("input", render);
+  $("statusFilter").addEventListener("change", render);
+  $("exportBtn").addEventListener("click", exportJSON);
+  $("resetBtn").addEventListener("click", resetAll);
+
+  $("markAllNone").addEventListener("click", () => bulkSet("NONE"));
+  $("markAllOk").addEventListener("click", () => bulkSet("OK"));
+  $("markAllKo").addEventListener("click", () => bulkSet("KO"));
+
+  // add item dialog
+  const dlg = $("addDialog");
+  $("addItemBtn").addEventListener("click", () => {
+    $("newSection").value = "";
+    $("newLabel").value = "";
+    $("newRef").value = "";
+    dlg.showModal();
+  });
+  $("confirmAdd").addEventListener("click", (e) => {
+    // dialog will close automatically (method=dialog)
+    const sectionName = $("newSection").value || "Divers";
+    const label = $("newLabel").value;
+    const ref = $("newRef").value;
+    if (!label.trim()) return;
+    addItem(sectionName, label, ref);
+  });
+
+  // first render
+  render();
+
+  // auto-save safety
+  window.addEventListener("beforeunload", save);
+})();
+</script>
+</body>
+</html>
