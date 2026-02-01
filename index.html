@@ -172,7 +172,16 @@
         <div class="sub">Statuts : Impossible / OK / KO • Sauvegarde locale • Export JSON</div>
       </div>
       <div class="controls">
-        <input id="siteName" class="pill" placeholder="Site (ex : Bayonne - BV)" />
+        <select id="siteSelect" class="pill">
+  <option value="">Choisir une gare…</option>
+  <option value="Bayonne - BV">Bayonne - BV</option>
+  <option value="Biarritz">Biarritz</option>
+  <option value="Saint-Jean-de-Luz">Saint-Jean-de-Luz</option>
+  <option value="Autre">Autre…</option>
+</select>
+
+<input id="siteName" class="pill" placeholder="Autre gare (si besoin)" style="display:none" />
+
         <input id="who" class="pill" placeholder="Contrôleur (nom)" />
         <input id="date" class="pill" type="date" />
         <input id="search" class="pill" type="search" placeholder="Rechercher un item…" />
@@ -347,7 +356,12 @@
   }
 
   function save() {
-    state.meta.siteName = $("siteName").value.trim();
+const selVal = $("siteSelect").value;
+if (selVal === "Autre") {
+  state.meta.siteName = $("siteName").value.trim();
+} else {
+  state.meta.siteName = selVal.trim();
+}
     state.meta.who = $("who").value.trim();
     state.meta.date = $("date").value || state.meta.date;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -376,10 +390,27 @@
 
   function render() {
     // update meta inputs
-    $("siteName").value = state.meta.siteName || "";
     $("who").value = state.meta.who || "";
-    $("date").value = state.meta.date || new Date().toISOString().slice(0,10);
+$("date").value = state.meta.date || new Date().toISOString().slice(0,10);
 
+const sel = $("siteSelect");
+const txt = $("siteName");
+const saved = (state.meta.siteName || "").trim();
+
+const known = ["Bayonne - BV", "Biarritz", "Saint-Jean-de-Luz"];
+if (known.includes(saved)) {
+  sel.value = saved;
+  txt.style.display = "none";
+  txt.value = "";
+} else if (saved) {
+  sel.value = "Autre";
+  txt.style.display = "inline-block";
+  txt.value = saved;
+} else {
+  sel.value = "";
+  txt.style.display = "none";
+  txt.value = "";
+}
     // stats
     const c = counts();
     $("sOk").textContent = c.ok;
@@ -581,7 +612,15 @@
   $("who").value = state.meta.who || "";
 
   // listeners
-  ["siteName","who","date"].forEach(id => $(id).addEventListener("change", save));
+  ["who","date"].forEach(id => $(id).addEventListener("change", save));
+$("siteSelect").addEventListener("change", () => {
+  const txt = $("siteName");
+  txt.style.display = ($("siteSelect").value === "Autre") ? "inline-block" : "none";
+  if ($("siteSelect").value !== "Autre") txt.value = "";
+  save();
+});
+$("siteName").addEventListener("input", save);
+
   $("search").addEventListener("input", render);
   $("statusFilter").addEventListener("change", render);
   $("exportBtn").addEventListener("click", exportJSON);
