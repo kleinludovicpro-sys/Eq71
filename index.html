@@ -162,6 +162,8 @@
     .linkish{color:#bfdbfe; text-decoration:underline; cursor:pointer}
     .footerBtns{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
   </style>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script> 
 </head>
 <body>
 <header>
@@ -187,6 +189,8 @@
         <input id="search" class="pill" type="search" placeholder="Rechercher un item…" />
         <button id="addItemBtn" title="Ajouter un item">+ Item</button>
         <button id="exportBtn" title="Exporter en JSON">Exporter</button>
+        <button onclick="exportXLSX()">XLSX</button>
+        <button onclick="exportDOCX()">DOCX</button>
         <button id="resetBtn" title="Réinitialiser (tout effacer)">Reset</button>
       </div>
     </div>
@@ -569,6 +573,149 @@ if (known.includes(saved)) {
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
+function exportXLSX() {
+  // Meta
+  const site = (state.meta.siteName || "").trim();
+  const who = (state.meta.who || "").trim();
+  const date = (state.meta.date || new Date().toISOString().slice(0,10));
+
+  // Header rows
+  const rows = [];
+  rows.push(["Checklist sécurité incendie"]);
+  rows.push(["Site", site]);
+  rows.push(["Contrôleur", who]);
+  rows.push(["Date", date]);
+  rows.push([]);
+
+  // Table header
+  rows.push(["Section", "Item", "Statut", "Note", "Référence"]);
+
+  // Data rows
+  state.sections.forEach(sec => {
+    sec.items.forEach(it => {
+      rows.push([
+        sec.name,
+        it.label,
+        it.status === "NONE" ? "" : it.status,
+        it.note || "",
+        it.ref || ""
+      ]);
+    });
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+
+  // Un peu de largeur colonne (lisible)
+  ws["!cols"] = [
+    { wch: 28 }, // Section
+    { wch: 55 }, // Item
+    { wch: 10 }, // Statut
+    { wch: 50 }, // Note
+    { wch: 16 }  // Réf
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Checklist");
+
+  const safeSite = (site || "site").replace(/[^\w\-]+/g, "_");
+  XLSX.writeFile(wb, `checklist_incendie_${safeSite}_${date}.xlsx`);
+}
+async function exportDOCX() {
+  const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, ImageRun } = docx;
+
+  const site = (state.meta.siteName || "").trim();
+  const who = (state.meta.who || "").trim();
+  const date = (state.meta.date || new Date().toISOString().slice(0,10));
+
+  // Helper cell
+  const cell = (text, bold=false) =>
+    new TableCell({
+      children: [new Paragraph({ children: [new TextRun({ text: String(text ?? ""), bold })] })]
+    });
+
+  // Build table rows
+  const tableRows = [];
+  tableRows.push(new TableRow({
+    children: [
+      cell("Section", true),
+      cell("Item", true),
+      cell("Statut", true),
+      cell("Note", true),
+      cell("Référence", true),
+    ],
+  }));
+
+  state.sections.forEach(sec => {
+    sec.items.forEach(it => {
+      tableRows.push(new TableRow({
+        children: [
+          cell(sec.name),
+          cell(it.label),
+          cell(it.status === "NONE" ? "" : it.status),
+          cell(it.note || ""),
+          cell(it.ref || ""),
+        ],
+      }));
+    });
+  });
+
+  // Signature image (si canvas existe)
+  let sigParagraph = new Paragraph("");
+  try {
+    const sigCanvas = document.getElementById("signature");
+    if (sigCanvas) {
+      const dataUrl = sigCanvas.toDataURL("image/png");
+      // Si canvas vide, dataUrl sera quand même valide; on teste si contenu non vide grossièrement
+      // (simple : on compare un canvas effacé vs non effacé serait plus lourd)
+      const base64 = dataUrl.split(",")[1];
+      const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+
+      sigParagraph = new Paragraph({
+        children: [
+          new TextRun({ text: "Signature :", bold: true }),
+          new TextRun({ text: " " }),
+          new ImageRun({
+            data: bytes,
+            transformation: { width: 300, height: 150 },
+          })
+        ]
+      });
+    }
+  } catch (e) {
+    // si souci, on met juste un placeholder
+    sigParagraph = new Paragraph("Signature : (non disponible)");
+  }
+
+  const doc = new Document({
+    sections: [{
+      children: [
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: "Checklist sécurité incendie", bold: true, size: 32 })],
+        }),
+        new Paragraph(""),
+        new Paragraph({ children: [new TextRun({ text: `Site : `, bold: true }), new TextRun(site || "-")] }),
+        new Paragraph({ children: [new TextRun({ text: `Contrôleur : `, bold: true }), new TextRun(who || "-")] }),
+        new Paragraph({ children: [new TextRun({ text: `Date : `, bold: true }), new TextRun(date)] }),
+        new Paragraph(""),
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: tableRows,
+        }),
+        new Paragraph(""),
+        sigParagraph,
+      ]
+    }]
+  });
+
+  const blob = await Packer.toBlob(doc);
+  const a = document.createElement("a");
+  const safeSite = (site || "site").replace(/[^\w\-]+/g, "_");
+  a.href = URL.createObjectURL(blob);
+  a.download = `checklist_incendie_${safeSite}_${date}.docx`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+}
 
   function resetAll() {
     if (!confirm("Tout effacer (statuts + notes + meta) ?")) return;
@@ -652,6 +799,9 @@ $("siteName").addEventListener("input", save);
 
   // auto-save safety
   window.addEventListener("beforeunload", save);
+  window.exportXLSX = exportXLSX;
+window.exportDOCX = exportDOCX;
+
 })();
 </script>
 </body>
